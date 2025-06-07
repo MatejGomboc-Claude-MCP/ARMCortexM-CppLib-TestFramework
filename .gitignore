@@ -1,0 +1,39 @@
+# Build directories
+build/
+cmake-build*/
+out/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Compiled files
+*.o
+*.a
+*.elf
+*.bin
+*.hex
+*.map
+
+# Test results
+*.xml
+*.html
+log.html
+report.html
+output.xml
+
+# Renode
+*.log
+*.resc
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# OS files
+.DS_Store
+Thumbs.db
