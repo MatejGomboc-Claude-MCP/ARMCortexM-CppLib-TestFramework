@@ -1,0 +1,22 @@
+cpu: CPU.CortexM @ sysbus
+    cpuType: "cortex-m1"
+    nvic: nvic
+
+nvic: IRQControllers.NVIC @ {
+    sysbus new Bus.BusMultiRegistration { address: 0xE000E000; size: 0x1000; region: "nvic" }
+}
+    -> cpu@0
+
+sram: Memory.MappedMemory @ sysbus 0x20000000
+    size: 0x10000
+
+flash: Memory.MappedMemory @ sysbus 0x00000000
+    size: 0x80000
+
+systick: Timers.CortexMSysTick @ sysbus 0xE000E010
+    -> nvic@15
+    frequency: 8000000
+
+sysbus:
+    init:
+        ApplySVD @https://raw.githubusercontent.com/posborne/cmsis-svd/master/data/ARM_SAMPLE/ARMCM1.svd
