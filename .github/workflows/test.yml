@@ -1,0 +1,67 @@
+name: Test ARM Cortex-M Library
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        cortex-variant: [m0, m0plus, m1, m3]
+    
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+    
+    - name: Install ARM GCC Toolchain
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gcc-arm-none-eabi
+    
+    - name: Install Renode
+      run: |
+        wget https://github.com/renode/renode/releases/download/v1.14.0/renode_1.14.0_amd64.deb
+        sudo dpkg -i renode_1.14.0_amd64.deb || true
+        sudo apt-get install -f -y
+    
+    - name: Install Robot Framework
+      run: |
+        pip install robotframework
+        pip install robotframework-renodekeywords
+    
+    - name: Configure CMake
+      run: |
+        cmake -B build \
+          -DCMAKE_TOOLCHAIN_FILE=cmake/arm-none-eabi.cmake \
+          -DCMAKE_BUILD_TYPE=Release
+    
+    - name: Build Test Firmware
+      run: cmake --build build --target test_firmware_cortex${{ matrix.cortex-variant }}
+    
+    - name: Run Tests
+      run: |
+        cd tests/robot
+        robot --variable VARIANT:${{ matrix.cortex-variant }} \
+              --outputdir ../../build/robot_results_${{ matrix.cortex-variant }} \
+              cortex${{ matrix.cortex-variant }}_tests.robot
+    
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results-cortex${{ matrix.cortex-variant }}
+        path: build/robot_results_${{ matrix.cortex-variant }}/
+    
+    - name: Upload Test Firmware
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-firmware-cortex${{ matrix.cortex-variant }}
+        path: |
+          build/tests/test_firmware_cortex${{ matrix.cortex-variant }}.elf
+          build/tests/test_firmware_cortex${{ matrix.cortex-variant }}.map
